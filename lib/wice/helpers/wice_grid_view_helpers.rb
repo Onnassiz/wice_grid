@@ -547,20 +547,20 @@ module Wice
       if options[:hide_submit_button]
         ''
       else
-        content_tag(:div, content_tag(:i, '', class: 'fa fa-filter'),
+        content_tag(:i, '',
                     title: NlMessage['filter_tooltip'],
                     id:    grid.name + '_submit_grid_icon',
-                    class: 'submit clickable'
+                    class: 'fa fa-filter submit clickable'
         )
       end.html_safe + ' ' +
         if options[:hide_reset_button]
           ''
         else
 
-          content_tag(:div, content_tag(:i, '', class: 'fa fa-table'),
+          content_tag(:i, '',
                       title: NlMessage['reset_filter_tooltip'],
                       id:    grid.name + '_reset_grid_icon',
-                      class: 'reset clickable'
+                      class: 'fa fa-table reset clickable'
           )
         end.html_safe
     end
