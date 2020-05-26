@@ -555,21 +555,10 @@ module Wice
                        end
                      end
 
-      return custom_order if custom_order.is_a?(Arel::Attributes::Attribute)
+      return custom_order if custom_order.nil? || custom_order.is_a?(Arel::Attributes::Attribute)
       return custom_order.gsub(/\?/, fully_qualified_column_name) if custom_order.is_a?(String)
       return custom_order.call(fully_qualified_column_name) if custom_order.is_a?(Proc)
-
-      if custom_order.blank?
-        sqlite = ActiveRecord::ConnectionAdapters.const_defined?(:SQLite3Adapter) && ActiveRecord::Base.connection.is_a?(ActiveRecord::ConnectionAdapters::SQLite3Adapter)
-        postgres = ActiveRecord::ConnectionAdapters.const_defined?(:PostgreSQLAdapter) && ActiveRecord::Base.connection.is_a?(ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
-        if sqlite || postgres
-          fully_qualified_column_name.strip.split('.').map { |chunk| ActiveRecord::Base.connection.quote_table_name(chunk) }.join('.')
-        else
-          ActiveRecord::Base.connection.quote_table_name(fully_qualified_column_name.strip)
-        end
-      else
-        raise WiceGridArgumentError.new("invalid custom order #{custom_order.inspect}")
-      end
+      raise WiceGridArgumentError.new("invalid custom order #{custom_order.inspect}")
     end
 
     def reference_col_from_arel(col_name)
