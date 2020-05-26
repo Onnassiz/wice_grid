@@ -296,9 +296,21 @@ module Wice
       # conditions processed
 
       if (!opts[:skip_ordering]) && ! @status[:order].blank?
-        @ar_options[:order] = add_custom_order_sql(complete_column_name(@status[:order]))
-
-        @ar_options[:order] += ' ' + @status[:order_direction]
+        custom_order = check_custom_order_reference
+        if custom_order
+          @ar_options[:order] = custom_order
+        else
+          @ar_options[:order] = reference_col_from_arel(@status[:order])
+        end
+        if @ar_options[:order].is_a?(Arel::Attributes::Attribute)
+          if @status[:order_direction] == 'desc'
+            @ar_options[:order] = @ar_options[:order].desc
+          else
+            @ar_options[:order] = @ar_options[:order].asc
+          end
+        else
+          @ar_options[:order] += " #{@status[:order_direction]}"
+        end
       end
 
       @ar_options[:joins]   = @options[:joins]
@@ -533,14 +545,19 @@ module Wice
       invoke_resultset_callback(@options[:with_resultset], self.active_relation_for_resultset_without_paging_with_user_filters)
     end
 
-    def add_custom_order_sql(fully_qualified_column_name) #:nodoc:
+    def check_custom_order_reference
+      fully_qualified_column_name = complete_column_name(@status[:order])
       custom_order = if @options[:custom_order].key?(fully_qualified_column_name)
-        @options[:custom_order][fully_qualified_column_name]
-      else
-        if view_column = @renderer[fully_qualified_column_name]
-          view_column.custom_order
-        end
-      end
+                       @options[:custom_order][fully_qualified_column_name]
+                     else
+                       if view_column = @renderer[fully_qualified_column_name]
+                         view_column.custom_order
+                       end
+                     end
+
+      return custom_order if custom_order.is_a?(Arel::Attributes::Attribute)
+      return custom_order.gsub(/\?/, fully_qualified_column_name) if custom_order.is_a?(String)
+      return custom_order.call(fully_qualified_column_name) if custom_order.is_a?(Proc)
 
       if custom_order.blank?
         sqlite = ActiveRecord::ConnectionAdapters.const_defined?(:SQLite3Adapter) && ActiveRecord::Base.connection.is_a?(ActiveRecord::ConnectionAdapters::SQLite3Adapter)
@@ -551,13 +568,16 @@ module Wice
           ActiveRecord::Base.connection.quote_table_name(fully_qualified_column_name.strip)
         end
       else
-        if custom_order.is_a? String
-          custom_order.gsub(/\?/, fully_qualified_column_name)
-        elsif custom_order.is_a? Proc
-          custom_order.call(fully_qualified_column_name)
-        else
-          raise WiceGridArgumentError.new("invalid custom order #{custom_order.inspect}")
-        end
+        raise WiceGridArgumentError.new("invalid custom order #{custom_order.inspect}")
+      end
+    end
+
+    def reference_col_from_arel(col_name)
+      if col_name.index('.') # check if `col_name` already has a table name attached
+        table_name, col_name = col_name.split('.', 2)
+        Arel::Table.new(table_name)[col_name]
+      else
+        @klass.arel_table[col_name]
       end
     end
 
