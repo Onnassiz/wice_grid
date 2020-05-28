@@ -1,3 +1,8 @@
+## Unreleased
+
+* Fix deprecation (in Rails 5.2) regarding "Dangerous query methods"
+* Add support for using `Arel::Attributes::Attribute`s with the `custom_order` option.
+
 # 3.6.3
 
 ### Focused Filter Has Cursor/Caret at the End of Input

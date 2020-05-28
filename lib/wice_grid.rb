@@ -297,17 +297,9 @@ module Wice
 
       if (!opts[:skip_ordering]) && ! @status[:order].blank?
         custom_order = check_custom_order_reference
-        if custom_order
-          @ar_options[:order] = custom_order
-        else
-          @ar_options[:order] = reference_col_from_arel(@status[:order])
-        end
-        if @ar_options[:order].is_a?(Arel::Attributes::Attribute)
-          if @status[:order_direction] == 'desc'
-            @ar_options[:order] = @ar_options[:order].desc
-          else
-            @ar_options[:order] = @ar_options[:order].asc
-          end
+        @ar_options[:order] = custom_order ? custom_order : reference_col_from_arel(@status[:order])
+        if @ar_options[:order].is_a?(Arel::Attributes::Attribute) || @ar_options[:order].is_a?(Arel::Nodes::SqlLiteral)
+          @ar_options[:order] = @status[:order_direction] == 'desc' ? @ar_options[:order].desc : @ar_options[:order].asc
         else
           @ar_options[:order] += " #{@status[:order_direction]}"
         end
