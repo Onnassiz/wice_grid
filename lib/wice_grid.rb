@@ -250,7 +250,7 @@ module Wice
       end
 
       if column
-        conditions_generator = ActiveRecordColumnWrapper.new(column, @status[:f], main_table, table_alias, custom_filter_active, filter_type)
+        conditions_generator = ActiveRecordColumnWrapper.new(column, @status[:f], main_table, table_alias, custom_filter_active, filter_type, table_name)
         conditions, current_parameter_name = conditions_generator.wg_initialize_request_parameters
 
         if @status[:f] && conditions.blank?

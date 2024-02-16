@@ -6,7 +6,7 @@ module Wice
   end
 
   class ActiveRecordColumnWrapper #:nodoc:
-    def initialize(column, all_filter_params, main_table, table_alias, custom_filter_active, filter_type) #:nodoc:
+    def initialize(column, all_filter_params, main_table, table_alias, custom_filter_active, filter_type, table_name) #:nodoc:
       @column = column
 
       # nil | Symbol
@@ -19,7 +19,7 @@ module Wice
       @main_table           = main_table
 
       # nil | String
-      @table_alias          = table_alias
+      @table_alias          = table_alias || table_name
 
       # nil | Array[String] | Array[Array[...]] | Array[Symbol]
       @custom_filter_active = custom_filter_active
